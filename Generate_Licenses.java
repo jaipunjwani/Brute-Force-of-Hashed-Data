@@ -1,11 +1,11 @@
 /**
- * Description: Generates all possible NYC TLC yellow taxi medallion numbers, as well as driver hack licenses
+ * Description: Generates all possible (or probable) NYC TLC yellow taxi medallion numbers, as well as driver hack licenses
  * 
  * L = letter ; N = number
  * Medallion formats: NLNN ; LLNNN ; LLLNNN
- * Hack_license format: NNNNNN
+ * Hack_license format: NNNNNN ; NNNNNNN
  * 
- * NOTE: as of version 1.0, this only returns 4 and 5 character medallions
+ * 
  * 
  * @author Jai Punjwani
  * @version 1.0
@@ -21,25 +21,27 @@ public class Generate_Licenses {
 	public static final int MEDALLION1SIZE = DIGITS.length * DIGITS.length * DIGITS.length  * LETTERS.length;
 	public static final int MEDALLION2SIZE = LETTERS.length * LETTERS.length * DIGITS.length * DIGITS.length * DIGITS.length;
 	public static final int MEDALLION3SIZE = LETTERS.length * LETTERS.length * LETTERS.length * DIGITS.length * DIGITS.length * DIGITS.length;
-	
 	public static final int MEDALLION_TOTAL = MEDALLION1SIZE + MEDALLION2SIZE + MEDALLION3SIZE;
+	
+	public static final int HACKLICENSE6SIZE = DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length ;
+	public static final int HACKLICENSE7SIZE = DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length * DIGITS.length;
+	public static final int HACKLICENSE_TOTAL = HACKLICENSE6SIZE + HACKLICENSE7SIZE;
+	
 	/**
 	 * @return array of all licenses in format: NLNN
 	 */
 	public static String[] generateMedallion1()
 	{	
-		int numSize = DIGITS.length;
-		int totalSize = numSize * LETTERS.length * numSize * numSize;
-		String[] licenses = new String[totalSize];
+		String[] licenses = new String[MEDALLION1SIZE];
 		int licenseIndex =0;
 		
-		for(int num1 =0; num1<numSize; num1++)
+		for(int num1 =0; num1<DIGITS.length; num1++)
 		{
 			for(int letter2 =0; letter2 < LETTERS.length; letter2++)
 			{
-				for(int num3 =0; num3<numSize; num3++)
+				for(int num3 =0; num3<DIGITS.length; num3++)
 				{
-					for(int num4 =0; num4<numSize; num4++)
+					for(int num4 =0; num4<DIGITS.length; num4++)
 					{
 						String license = "" + DIGITS[num1] + LETTERS[letter2] + DIGITS[num3] + DIGITS[num4];
 						licenses[licenseIndex] = license;
@@ -60,8 +62,8 @@ public class Generate_Licenses {
 	 */
 	public static String[] generateMedallion2()
 	{
-		int totalSize = LETTERS.length * LETTERS.length * DIGITS.length * DIGITS.length * DIGITS.length;
-		String[] licenses = new String[totalSize];
+		
+		String[] licenses = new String[MEDALLION2SIZE];
 		int licenseIndex =0;    
 		for(int letter1=0; letter1<LETTERS.length; letter1++)
 		{
@@ -93,8 +95,7 @@ public class Generate_Licenses {
 	 */
 	public static String[] generateMedallion3()
 	{
-		int totalSize = LETTERS.length * LETTERS.length * LETTERS.length * DIGITS.length * DIGITS.length * DIGITS.length;
-		String[] licenses = new String[totalSize];
+		String[] licenses = new String[MEDALLION3SIZE];
 		int licenseIndex =0;    
 		for(int letter1=0; letter1<LETTERS.length; letter1++)
 		{
@@ -165,8 +166,9 @@ public class Generate_Licenses {
 	}
 	
 	/**
-	 * Overloaded method to allow 
+	 * Overloaded method to split medallions into specified number of arrays - this is done so Java garbage-collects once we hash each of the sub-arrays
 	 * @param medallionArrays - number of arrays to split medallions into
+	 * @return double dimension array containing number of arrays specified of medallions
 	 */
 	public static String[][] generateMedallionAll(int numArrays)
 	{
@@ -229,22 +231,20 @@ public class Generate_Licenses {
 	 */
 	public static String[] generate6DigitHackLicenses()
 	{
-		int numLength = DIGITS.length;
-		int totalSize = numLength * numLength * numLength * numLength * numLength * numLength;
-		String[] hackLicenses = new String[totalSize];
+		String[] hackLicenses = new String[HACKLICENSE6SIZE];
 		int licenseIndex = 0;
 		
-		for(int num1 =0; num1<numLength; num1++)
+		for(int num1 =0; num1<DIGITS.length; num1++)
 		{
-			for(int num2 =0; num2<numLength; num2++)
+			for(int num2 =0; num2<DIGITS.length; num2++)
 			{
-				for(int num3=0; num3<numLength; num3++)
+				for(int num3=0; num3<DIGITS.length; num3++)
 				{
-					for(int num4=0; num4<numLength; num4++)
+					for(int num4=0; num4<DIGITS.length; num4++)
 					{
-						for(int num5=0; num5<numLength; num5++)
+						for(int num5=0; num5<DIGITS.length; num5++)
 						{
-							for(int num6=0; num6<numLength; num6++)
+							for(int num6=0; num6<DIGITS.length; num6++)
 							{
 									String license = "" + DIGITS[num1] + DIGITS[num2] + DIGITS[num3] + DIGITS[num4] + DIGITS[num5] + DIGITS[num6];
 									hackLicenses[licenseIndex] = license;
@@ -266,24 +266,22 @@ public class Generate_Licenses {
 	 */
 	public static String[] generate7DigitHackLicenses()
 	{
-		int numLength = DIGITS.length;
-		int totalSize = numLength * numLength * numLength * numLength * numLength * numLength *numLength;
-		String[] hackLicenses = new String[totalSize];
+		String[] hackLicenses = new String[HACKLICENSE7SIZE];
 		int licenseIndex = 0;
 		
-		for(int num1 =0; num1<numLength; num1++)
+		for(int num1 =0; num1<DIGITS.length; num1++)
 		{
-			for(int num2 =0; num2<numLength; num2++)
+			for(int num2 =0; num2<DIGITS.length; num2++)
 			{
-				for(int num3=0; num3<numLength; num3++)
+				for(int num3=0; num3<DIGITS.length; num3++)
 				{
-					for(int num4=0; num4<numLength; num4++)
+					for(int num4=0; num4<DIGITS.length; num4++)
 					{
-						for(int num5=0; num5<numLength; num5++)
+						for(int num5=0; num5<DIGITS.length; num5++)
 						{
-							for(int num6=0; num6<numLength; num6++)
+							for(int num6=0; num6<DIGITS.length; num6++)
 							{
-								for(int num7 =0; num7<numLength; num7++)
+								for(int num7 =0; num7<DIGITS.length; num7++)
 								{
 									String license = "" + DIGITS[num1] + DIGITS[num2] + DIGITS[num3] + DIGITS[num4] + DIGITS[num5] + DIGITS[num6] + DIGITS[num7];
 									hackLicenses[licenseIndex] = license;

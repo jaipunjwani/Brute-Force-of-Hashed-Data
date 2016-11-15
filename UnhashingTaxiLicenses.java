@@ -13,20 +13,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 /**
- * Description: Deanonymize NYC's Taxi and Limousine Company's hack license and medallion data
- * The program generates all possible medallion and hack license numbers, and find their corresponding hash using the MD5 algorithm
- * NOTE: The hashes in the dataset are capitalized, so we return capitalized hashes in this program
+ * Description: "Unhash" NYC TLC's 2013 Yellow Taxi data - hack license and medallion (driver ID, and medallion ID, respectively)
+ * The program uses a brute force method to generate all possible medallion and hack license numbers, and find their corresponding hash using the MD5 algorithm
+ * 
+ * NOTE The hashes in the 2013 dataset are capitalized, so we return capitalized hashes in this program
+ * 
  * 
  * @author Jai Punjwani
  * @version 1.0
  */
 public class UnhashingTaxiLicenses
 {
-	 static HashMap<String, String> hashMedallions = new HashMap();
-	 static HashMap<String, String> medallions1 = new HashMap();
-	 static HashMap<String, String> medallions2 = new HashMap();
-	 static HashMap<String, String> sixDigitHackLicenses = new HashMap();
-	 static HashMap<String, String> sevenDigitHackLicenses = new HashMap();
+	 static final int numMedallionArrays = 2; // we split medallions into multiple arrays for memory management 
+	 
+	 // initializing HashMap with capacity avoids unnecessary re-indexing/re-allocation of memory
+	 static HashMap<String, String> hashMedallions = new HashMap(Generate_Licenses.MEDALLION_TOTAL);
+	 static HashMap<String, String> medallions1 = new HashMap(Generate_Licenses.MEDALLION_TOTAL/numMedallionArrays);
+	 static HashMap<String, String> medallions2 = new HashMap(Generate_Licenses.MEDALLION_TOTAL/numMedallionArrays);
+	 static HashMap<String, String> sixDigitHackLicenses = new HashMap(Generate_Licenses.HACKLICENSE6SIZE);
+	 static HashMap<String, String> sevenDigitHackLicenses = new HashMap(Generate_Licenses.HACKLICENSE7SIZE);
 	 
     
      public static void main (String[] args)throws NoSuchAlgorithmException, FileNotFoundException
@@ -34,53 +39,42 @@ public class UnhashingTaxiLicenses
          setUp(); 
     	 
     	 System.out.println("Deserializing. Allow approximately 3-4 minutes");
-         hashMedallions = (HashMap) deserializeData(hashMedallions, hashMedallions.getClass(), "medallions.exclude");
-         medallions1 = (HashMap) deserializeData(medallions1, medallions1.getClass(), "medallions1.exclude");
-         medallions1 = (HashMap) deserializeData(medallions2, medallions2.getClass(), "medallions2.exclude");
+         //hashMedallions = (HashMap) deserializeData("medallions.exclude");
+         medallions1 = (HashMap) deserializeData("medallions1.exclude");
+         medallions2 = (HashMap) deserializeData("medallions2.exclude");
          
-    	 sixDigitHackLicenses = (HashMap) deserializeData(sixDigitHackLicenses, sixDigitHackLicenses.getClass(), "hackLicenses6.exclude");
-    	 sevenDigitHackLicenses = (HashMap) deserializeData(sevenDigitHackLicenses, sevenDigitHackLicenses.getClass(), "hackLicenses7.exclude");
+    	 sixDigitHackLicenses = (HashMap) deserializeData("hackLicenses6.exclude");
+    	 sevenDigitHackLicenses = (HashMap) deserializeData("hackLicenses7.exclude");
     	 
     	 
          //EXAMPLES
          String medallionHash = "B12DB2625EBD5A2EBECBCD25AC089928";
-         System.out.println(medallionHash + " matches to " + getMedallion(medallionHash));
+         System.out.println("Hashed medallion " + medallionHash + " mapped to " + getMedallion(medallionHash));
         
          String licenseHash = "0BB6EDE86969525491B06031E8460F41"; 
-         System.out.println(licenseHash + " mapped to " + getLicense(licenseHash));
+         System.out.println("Hashed hack license " + licenseHash + " mapped to " + getLicense(licenseHash));
          
-         licenseHash = "CFCD208495D565EF66E7DFF9F98764DA";
-         System.out.println(licenseHash + " mapped to " + getLicense(licenseHash));
          
-         String license = "2E42";
-         System.out.println("license " + license + " hashed to " + MD5(license));  
+         String medallion = "2E42";
+         System.out.println("Medallion " + medallion + " hashed as " + MD5(medallion));  
          
          
          String hackLicense = "493092";
-         String hash = MD5(hackLicense);
-         System.out.println(hash + " " + hackLicense);
+         System.out.println("Hack license " + hackLicense + " hashed as " + MD5(hackLicense));
          
-           
-         String ex = "275572";
-         hash = MD5(ex);
-         System.out.println(hash);
-           
-         ex = "5418523";
-         hash = MD5(ex);
-         System.out.println(hash);
            
      }
     
      /**
       * Generates table of medallions and licenses with corresponding hash and saves them to large files used to load the data
       * NOTE: the .exclude extension should be added to .gitignore file to prevent large file from being stored to GitHub 
-      * CAVEAT: allow 6-10 minutes for set up. If you run out of memory, run each method call one at a time
+      * CAVEAT: allow 6-10 minutes for set up. If you run out of memory, run each method call below one at a time
       * @throws NoSuchAlgorithmException
       */
-     private static boolean setUp() throws NoSuchAlgorithmException
+     public static boolean setUp() throws NoSuchAlgorithmException
      {
     	 
-    	 System.out.println("Setting up. Allow up to 10 minutes");
+    	 System.out.println("Setting up. Allow up to 20 minutes");
     	 
     	 if(!(new File("medallions1.exclude").exists() && new File("medallions2.exclude").exists()))
     	 {
@@ -89,12 +83,12 @@ public class UnhashingTaxiLicenses
     	 
     	 if(!(new File("hackLicenses6.exclude").exists()))
     	 {
-         setUp6DigitHackLicenses();
+    		 setUp6DigitHackLicenses();
     	 }
     	 
     	 if(!(new File("hackLicenses7.exclude").exists()))
     	 {
-         setUp7DigitHackLicenses();
+    		 setUp7DigitHackLicenses();
     	 }
          
     	 System.out.println("Files created/loaded, setup complete");
@@ -105,16 +99,18 @@ public class UnhashingTaxiLicenses
      private static void setUpMedallions() throws NoSuchAlgorithmException
      {
     	 
-    	 String[][] allMedallions = Generate_Licenses.generateMedallionAll(2);
+    	 String[][] allMedallions = Generate_Licenses.generateMedallionAll(numMedallionArrays);
     	 for(int arr =0; arr<allMedallions.length; arr++)
     	 {
-    		 String[] medallions = allMedallions[arr];
-    		 System.out.println("Hashing Medallions part " + (arr + 1));
-             String[] hashes = MD5(medallions);
-             System.out.println("Creating hashmap part " + (arr+1));
-             HashMap<String, String> medallionsHM = generateHashMap(hashes, medallions);
-             System.out.println("serializing part " + (arr +1));
-             serializeData(medallionsHM, medallionsHM.getClass(), "medallions" + (arr+1) + ".exclude");
+    		 if(!new File("medallions" + (arr+1) + ".exclude").exists()) {
+	    		 String[] medallions = allMedallions[arr];
+	    		 System.out.println("Hashing Medallions part " + (arr + 1));
+	             String[] hashes = MD5(medallions);
+	             System.out.println("Creating hashmap part " + (arr+1));
+	             HashMap<String, String> medallionsHM = generateHashMap(hashes, medallions, medallions.length);
+	             System.out.println("serializing part " + (arr +1));
+	             serializeData(medallionsHM, "medallions" + (arr+1) + ".exclude");
+    		 }
     	 }
      }
      
@@ -125,9 +121,9 @@ public class UnhashingTaxiLicenses
          System.out.println("Hashing");
          String[] hackLicenseHashes = MD5(hackLicenses6);
          System.out.println("Generating hashmap");
-         HashMap<String, String> hackLicenses6HM = generateHashMap(hackLicenseHashes, hackLicenses6);
+         HashMap<String, String> hackLicenses6HM = generateHashMap(hackLicenseHashes, hackLicenses6, Generate_Licenses.HACKLICENSE6SIZE);
          System.out.println("serializing");
-         serializeData(hackLicenses6HM,hackLicenses6HM.getClass(), "hackLicenses6.exclude"); 
+         serializeData(hackLicenses6HM, "hackLicenses6.exclude"); 
      }
      
      private static void setUp7DigitHackLicenses() throws NoSuchAlgorithmException
@@ -137,12 +133,16 @@ public class UnhashingTaxiLicenses
          System.out.println("Hashing");
          String[] hackLicenseHashes = MD5(hackLicenses7);
          System.out.println("Generating hashmap");
-         HashMap<String, String> hackLicenses7HM = generateHashMap(hackLicenseHashes, hackLicenses7);
+         HashMap<String, String> hackLicenses7HM = generateHashMap(hackLicenseHashes, hackLicenses7, Generate_Licenses.HACKLICENSE7SIZE);
          System.out.println("serializing");
-         serializeData(hackLicenses7HM,hackLicenses7HM.getClass(), "hackLicenses7.exclude");
+         serializeData(hackLicenses7HM, "hackLicenses7.exclude");
     	 
      }
      
+     /**
+      * @param hash hashed medallion
+      * @return 'unhashed' medallion 
+      */
      public static String getMedallion(String hash)
      {
     	 String medallion =  (String) medallions1.get(hash);
@@ -155,6 +155,10 @@ public class UnhashingTaxiLicenses
     	
      }
      
+     /*
+      * @param hash hashed hack license
+      * @return 'unhashed' hack license
+      */
      public static String getLicense(String hash)
      {
     	 String license = (String) sixDigitHackLicenses.get(hash);
@@ -166,10 +170,12 @@ public class UnhashingTaxiLicenses
     	 return (String) sevenDigitHackLicenses.get(hash);
     	 
      }
-     public static HashMap<String, String> generateHashMap(String[] keys, String[] values)
+     
+     
+     private static HashMap<String, String> generateHashMap(String[] keys, String[] values, int initialCapacity)
      {
     	 int size = keys.length;
-    	 HashMap<String, String> hm = new HashMap();
+    	 HashMap<String, String> hm = new HashMap(initialCapacity);
     	 
     	 for(int i=0; i<size; i++)
     	 {
@@ -179,8 +185,8 @@ public class UnhashingTaxiLicenses
     	 
      }
      
-     //hashes in our dataset are all upper case, so we do the same for 
-     public static String toUpperCase(String hash)
+     //capitalizes hash to follow convention of data set
+     private static String toUpperCase(String hash)
      {
     	 
     	 int size = hash.length();
@@ -204,9 +210,7 @@ public class UnhashingTaxiLicenses
     	 
      }
      
-     /*
-      * @return true if the character being processed is a digit
-      */
+     
      private static boolean isNumber(char c)
      {
     	 for(int i =0; i<Generate_Licenses.DIGITS.length; i++)
@@ -225,7 +229,9 @@ public class UnhashingTaxiLicenses
       */
      public static String MD5(String str)throws NoSuchAlgorithmException
      {
-    	 
+    	 	if (str == null) {
+    	 		return "NULL STR";
+    	 	}
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.reset();
             byte[] buffer = str.getBytes();
@@ -252,7 +258,7 @@ public class UnhashingTaxiLicenses
      public static String[] MD5(String[] licenses)throws NoSuchAlgorithmException
      {
      
-    	 int size = licenses.lengt	h;
+    	 int size = licenses.length;
     	 String[] hashes = new String[size];
          int hashIndex =0;
          
@@ -268,8 +274,11 @@ public class UnhashingTaxiLicenses
          
      }
      
-    
-      public static void serializeData(Object object, Class<?> cls, String filepath)
+     /**
+      * @param object object to serialize
+      * @param filepath path to store serialized object
+      */
+      public static void serializeData(Object object, String filepath)
       { 
     	  try
           {
@@ -289,11 +298,12 @@ public class UnhashingTaxiLicenses
       }
       
       /**
-       * @param input 
-       * @return deserialized object
+       * @param filepath path of file to deserialize
+       * @return deserialized object 
        */
-      public static Object deserializeData(Object input,Class<?> cls, String filepath)
+      public static Object deserializeData(String filepath)
       {
+    	  Object input = null;
     	  try
           {
              FileInputStream fileIn = new FileInputStream(filepath);
